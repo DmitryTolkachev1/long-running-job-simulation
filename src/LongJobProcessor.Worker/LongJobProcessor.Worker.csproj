@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <PublishAot>true</PublishAot>
+    <UserSecretsId>dotnet-LongJobProcessor.Worker-34f0b6b2-5da4-435b-ba76-80c71bf01b8b</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..</DockerfileContext>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LongJobProcessor.Application\LongJobProcessor.Application.csproj" />
+    <ProjectReference Include="..\LongJobProcessor.Domain\LongJobProcessor.Domain.csproj" />
+    <ProjectReference Include="..\LongJobProcessor.Infrastructure\LongJobProcessor.Infrastructure.csproj" />
+    <ProjectReference Include="..\LongJobProcessor.Persistence\LongJobProcessor.Persistence.csproj" />
+  </ItemGroup>
+</Project>
