@@ -1,4 +1,5 @@
 ﻿using LongJobProcessor.Application.Common;
+using LongJobProcessor.Application.DTO;
 using LongJobProcessor.Application.Jobs.Commands.CancelJob;
 using LongJobProcessor.Application.Jobs.Commands.ConnectToJob;
 using LongJobProcessor.Application.Jobs.Commands.CreateJob;
@@ -46,10 +47,10 @@ public class JobsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<CreateJobResult>> CreateJob(JobType jobType, Dictionary<string, object> payload, CancellationToken cancellationToken)
+    public async Task<ActionResult<CreateJobResult>> CreateJob(CreateJobRequest request, CancellationToken cancellationToken)
     {
         var userId = GetUserId();
-        var command = new CreateJobCommand(userId, jobType, payload);
+        var command = new CreateJobCommand(userId, request.JobType, request.JobData);
 
         return await _mediator.Send(command, cancellationToken);
     }

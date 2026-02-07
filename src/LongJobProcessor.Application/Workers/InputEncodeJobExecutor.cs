@@ -21,15 +21,45 @@ public sealed class InputEncodeJobExecutor : IJobExecutor
 
         var processed = BuildEncoded(inputEncodeJob.Input);
 
-        foreach (var character in processed)
+        var startPosition = inputEncodeJob.Cursor;
+        var produced = inputEncodeJob.Produced;
+
+        if (startPosition > 0 || !string.IsNullOrEmpty(produced))
+        {
+            if (startPosition > processed.Length)
+            {
+                startPosition = 0;
+                produced = string.Empty;
+                inputEncodeJob.ResetProgress();
+            }
+            else if (startPosition > 0 && startPosition <= processed.Length)
+            {
+                var expectedPrefix = processed.Substring(0, startPosition);
+                if (produced != expectedPrefix)
+                {
+                    startPosition = 0;
+                    produced = string.Empty;
+                    inputEncodeJob.ResetProgress();
+                }
+            }
+        }
+
+        for (int i = startPosition; i < processed.Length; i++)
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            var character = processed[i];
+            produced += character;
+
+            inputEncodeJob.UpdateProgress(i+1, produced);
 
             await progressCallback(character);
 
             var delayInSeconds = _random.Next(1, 6);
             await Task.Delay(TimeSpan.FromSeconds(delayInSeconds), cancellationToken);
         }
+
+        inputEncodeJob.UpdateProgress(processed.Length, processed);
     }
 
     private static string BuildEncoded(string input)

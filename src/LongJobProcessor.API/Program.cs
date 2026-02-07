@@ -1,9 +1,11 @@
+using LongJobProcessor.API.Workers;
 using LongJobProcessor.Application.Abstractions;
 using LongJobProcessor.Application.Behaviors;
 using LongJobProcessor.Application.Jobs.Commands.CreateJob;
 using LongJobProcessor.Application.Workers;
 using LongJobProcessor.Application.Workers.Notifiers;
 using LongJobProcessor.Domain.Entities.Jobs;
+using LongJobProcessor.Infrastructure.ConnectionManagers;
 using LongJobProcessor.Infrastructure.Jobs;
 using LongJobProcessor.Infrastructure.Workers;
 using LongJobProcessor.Persistence;
@@ -17,6 +19,18 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? ["http://localhost:4200"];
+
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowedSpecificOrigin", policy =>
+            {
+                policy.WithOrigins(allowedOrigins)
+                      .AllowAnyMethod()
+                      .AllowAnyHeader()
+                      .AllowCredentials();
+            });
+        });
 
         builder.Services.AddDbContext<AppDbContext>(options =>
         {
@@ -31,15 +45,13 @@ public class Program
 
         builder.Services.AddSingleton<IJobExecutor, InputEncodeJobExecutor>();
 
+        builder.Services.AddSingleton<IConnectionManager, SseConnectionManager>();
         builder.Services.AddSingleton<IProgressNotifier, SseProgressNotifier>();
-        builder.Services.AddSingleton<SseProgressNotifier>();
 
         builder.Services.AddHostedService<JobWorker>();
+        builder.Services.AddHostedService<JobCleanupWorker>();
 
-        builder.Services.AddControllers(options =>
-        {
-            options.ReturnHttpNotAcceptable = false;
-        });
+        builder.Services.AddControllers();
 
         builder.Services.AddSwaggerGen();
 
@@ -64,9 +76,9 @@ public class Program
         }
 
         app.UseHttpsRedirection();
-
         app.UseAuthorization();
 
+        app.UseCors("AllowedSpecificOrigin");
 
         app.MapControllers();
 

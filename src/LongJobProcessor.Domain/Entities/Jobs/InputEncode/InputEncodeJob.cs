@@ -10,5 +10,16 @@ public sealed class InputEncodeJob : Job
     public required string Input { get; set; }
     public int Cursor { get; set; }
     public string? Produced { get; set; }
-    public int TotalLength { get => Input.Length; }
+
+    public void UpdateProgress(int cursor, string produced)
+    {
+        Cursor = cursor;
+        Produced = produced;
+    }
+
+    public void ResetProgress()
+    {
+        Cursor = 0;
+        Produced = string.Empty;
+    }
 }

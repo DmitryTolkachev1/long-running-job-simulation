@@ -33,8 +33,4 @@
     </Compile>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Workers\Notifiers\" />
-  </ItemGroup>
-
 </Project>

@@ -20,7 +20,7 @@ public sealed class CancelJobHandler : IRequestHandler<CancelJobCommand, BaseRes
 
     public async Task<BaseResponse> Handle(CancelJobCommand request, CancellationToken cancellationToken)
     {
-        var job = await _jobRepository.GetAsync(request.JobId, cancellationToken);
+        var job = await _jobRepository.GetAsNoTrackingAsync(request.JobId, cancellationToken);
 
         if (job is null)
         {

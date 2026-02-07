@@ -5,9 +5,11 @@ namespace LongJobProcessor.Domain.StateMachine;
 
 public sealed class JobStateMachine
 {
+    private const int _maxRetries = 3;
+
     public JobStatus Status { get; private set; }
     public string? JobOwner { get; private set; }
-    public DateTimeOffset? TakenUntil { get; private set; }
+    public DateTime? TakenUntil { get; private set; }
     public int RetryCount { get; private set; }
 
     public JobStateMachine()
@@ -26,12 +28,14 @@ public sealed class JobStateMachine
         Status = JobStatus.Queued;
     }
 
-    public bool TryAcquireJob(string workerId, DateTimeOffset now, TimeSpan duration) 
+    public bool TryAcquireJob(string workerId, DateTime now, TimeSpan duration) 
     {
         if (Status != JobStatus.Queued && Status != JobStatus.Retrying) 
         {
             return false;
         }
+
+        CheckOwnershipExpired(now, _maxRetries);
 
         JobOwner = workerId;
         TakenUntil = now.Add(duration);
@@ -46,7 +50,7 @@ public sealed class JobStateMachine
         Status = JobStatus.Running;
     }
 
-    public void Heartbeat(string workerId, DateTimeOffset now, TimeSpan duration)
+    public void Heartbeat(string workerId, DateTime now, TimeSpan duration)
     {
         Ensure(JobStatus.Taken, JobStatus.Running, JobStatus.Cancelling);
         EnsureOwner(workerId);
@@ -65,6 +69,14 @@ public sealed class JobStateMachine
                 Status = JobStatus.Cancelling;
                 break;
         }
+
+        ClearOwnership();
+    }
+
+    public void Retry()
+    {
+        Ensure(JobStatus.Abandoned);
+        Status = JobStatus.Retrying;
     }
 
     public void Complete(string workerId)
@@ -91,7 +103,7 @@ public sealed class JobStateMachine
         ClearOwnership();
     }
 
-    public void CheckOwnershipExpired(DateTimeOffset now, int maxRetries)
+    public void CheckOwnershipExpired(DateTime now, int maxRetries)
     {
         if (TakenUntil is null)
         {
@@ -120,10 +132,22 @@ public sealed class JobStateMachine
         }
     }
 
-    public void Requeue() 
+    public void CancelStuck(DateTime now, TimeSpan duration)
     {
-        Ensure(JobStatus.Retrying);
-        Status = JobStatus.Queued;
+        if (Status != JobStatus.Cancelling)
+        {
+            throw new InvalidStateTransitionException(Status);
+        }
+
+        if (JobOwner is null || (TakenUntil.HasValue && now > TakenUntil.Value.Add(duration)))
+        {
+            Status = JobStatus.Cancelled;
+            ClearOwnership();
+        }
+        else
+        {
+            throw new InvalidOperationException("Cannot cancel job that is still owned by a worker");
+        }
     }
 
     private void Ensure(params JobStatus[] allowed) 

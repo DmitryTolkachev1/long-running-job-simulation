@@ -1,5 +1,6 @@
 ﻿using LongJobProcessor.Application.Abstractions;
 using LongJobProcessor.Domain.Entities.Jobs;
+using LongJobProcessor.Domain.Enums;
 using LongJobProcessor.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,9 +20,23 @@ public class JobRepository : IJobRepository<Job>
         await _dbContext.SaveChangesAsync();
     }
 
-    public Task<Job?> GetAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<Job?> GetAsNoTrackingAsync(Guid id, CancellationToken cancellationToken)
     {
-        return _dbContext.Jobs.FirstOrDefaultAsync(job => job.Id == id, cancellationToken);
+        return await _dbContext.Jobs
+               .AsNoTracking()
+               .FirstOrDefaultAsync(job => job.Id == id, cancellationToken);
+    }
+
+    public async Task<Job?> GetAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return await _dbContext.Jobs.FirstOrDefaultAsync(job => job.Id == id, cancellationToken);
+    }
+
+    public async Task<IEnumerable<Job>> GetByStatusAsync(JobStatus status, CancellationToken cancellationToken)
+    {
+        return await _dbContext.Jobs
+               .Where(job => job.State.Status == status)
+               .ToListAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(Job job, CancellationToken cancellationToken)

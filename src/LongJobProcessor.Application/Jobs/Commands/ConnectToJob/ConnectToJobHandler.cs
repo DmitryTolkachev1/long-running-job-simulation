@@ -1,5 +1,8 @@
-﻿using LongJobProcessor.Application.Common;
+﻿using LongJobProcessor.Application.Abstractions;
+using LongJobProcessor.Application.Common;
 using LongJobProcessor.Application.Workers.Notifiers;
+using LongJobProcessor.Domain.Entities.Jobs;
+using LongJobProcessor.Domain.Enums;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
@@ -8,20 +11,22 @@ namespace LongJobProcessor.Application.Jobs.Commands.ConnectToJob;
 
 public sealed class ConnectToJobHandler : IRequestHandler<ConnectToJobQuery, BaseResponse>
 {
-    private readonly SseProgressNotifier _progressNotifier;
+    private readonly IConnectionManager _connectionManager;
     private readonly ILogger<ConnectToJobHandler> _logger;
+    private readonly IJobRepository<Job> _jobRepository;
 
-    public ConnectToJobHandler(SseProgressNotifier progressNotifier, ILogger<ConnectToJobHandler> logger)
+    public ConnectToJobHandler(IConnectionManager connectionManager, ILogger<ConnectToJobHandler> logger, IJobRepository<Job> jobRepository)
     {
-        _progressNotifier = progressNotifier;
+        _connectionManager = connectionManager;
         _logger = logger;
+        _jobRepository = jobRepository;
     }
 
     public async Task<BaseResponse> Handle(ConnectToJobQuery request, CancellationToken cancellationToken)
     {
         var writer = request.Writer;
-        
-        _progressNotifier.RegisterConnection(request.UserId, request.JobId, writer);
+
+        _connectionManager.RegisterConnection(request.UserId, request.JobId, writer);
 
         try
         {
@@ -35,6 +40,12 @@ public sealed class ConnectToJobHandler : IRequestHandler<ConnectToJobQuery, Bas
 
             while (!cancellationToken.IsCancellationRequested)
             {
+                var job = await _jobRepository.GetAsNoTrackingAsync(request.JobId, cancellationToken);
+                if (job is null || job.Status is JobStatus.Cancelled or JobStatus.Cancelling or JobStatus.Completed)
+                {
+                    break;
+                }
+
                 await Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
 
                 var keepAlive = "keep-alive";
@@ -49,7 +60,7 @@ public sealed class ConnectToJobHandler : IRequestHandler<ConnectToJobQuery, Bas
         }
         finally
         {
-            _progressNotifier.UnregisterConnection(request.UserId, request.JobId);
+            _connectionManager.UnregisterConnection(request.UserId, request.JobId);
             await writer.DisposeAsync();
         }
 

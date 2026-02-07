@@ -33,9 +33,9 @@ public class BaseResponse
 
     public int StatusCode { get; set; } = (int)HttpStatusCode.OK;
 
-    public List<string> Errors { get; set; }
+    public List<string>? Errors { get; set; }
 
-    public string Message { get; set; }
+    public string? Message { get; set; }
 
     public void AddError(string description)
     {

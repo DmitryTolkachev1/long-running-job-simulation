@@ -15,6 +15,8 @@ public sealed class JobWorker : BackgroundService
     private readonly string _workerId;
     private readonly TimeSpan _heartBeatInterval = TimeSpan.FromMinutes(5);
     private readonly TimeSpan _lockDuration = TimeSpan.FromMinutes(5);
+    private const int _progressSaveInterval = 5;
+    private const int _maxRetries = 3;
 
     public JobWorker(
         IJobQueue jobQueue,
@@ -115,7 +117,7 @@ public sealed class JobWorker : BackgroundService
                         {
                             await Task.Delay(TimeSpan.FromSeconds(1), jobCts.Token);
 
-                            var reloadedJob = await jobRepository.GetAsync(jobId, jobCts.Token);
+                            var reloadedJob = await jobRepository.GetAsNoTrackingAsync(jobId, jobCts.Token);
                             if (reloadedJob?.Status == JobStatus.Cancelling)
                             {
                                 jobCts.Cancel();
@@ -129,6 +131,8 @@ public sealed class JobWorker : BackgroundService
                     }
                 }, jobCts.Token);
 
+                var progressSaveCounter = 0;
+
                 await executor.ExecuteAsync(
                     job,
                     async (data) =>
@@ -138,6 +142,20 @@ public sealed class JobWorker : BackgroundService
                             jobCts.Token.ThrowIfCancellationRequested();
                         }
                         await _progressNotifier.NotifyProgressAsync(job.UserId, jobId, data, jobCts.Token);
+
+                        progressSaveCounter++;
+                        if (progressSaveCounter >= _progressSaveInterval) 
+                        {
+                            progressSaveCounter = 0;
+                            try
+                            {
+                                await jobRepository.UpdateAsync(job, jobCts.Token);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, $"Failed to save progress for the job {job.Id}");
+                            }
+                        }
                     },
                     jobCts.Token);
 
@@ -159,7 +177,7 @@ public sealed class JobWorker : BackgroundService
                 heartbeatCts.Cancel();
                 try { await heartbeatTask; } catch { }
 
-                job = await jobRepository.GetAsync(jobId, cancellationToken);
+                job = await jobRepository.GetAsNoTrackingAsync(jobId, cancellationToken);
                 if (job is not null && job.Status == JobStatus.Cancelling)
                 {
                     job.State.CancelByWorker(_workerId);

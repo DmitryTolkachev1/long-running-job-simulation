@@ -20,7 +20,6 @@ public abstract class Job
     }
 
     public void Enqueue() => State.Enqueue();
-    public bool TryAcquire(string workerId, DateTimeOffset now, TimeSpan duration) => State.TryAcquireJob(workerId, now, duration);
     public void Start(string workerId)
     {
         State.Start(workerId);
