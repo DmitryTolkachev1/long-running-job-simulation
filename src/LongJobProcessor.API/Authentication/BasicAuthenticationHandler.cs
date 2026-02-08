@@ -19,7 +19,7 @@ public sealed class BasicAuthenticationHandler : AuthenticationHandler<Authentic
         : base(options, logger, encoder)
     {
         _validUsername = Environment.GetEnvironmentVariable("USERNAME") ?? "user";
-        _validPassword = Environment.GetEnvironmentVariable("PASSWORD") ?? "passowrd";
+        _validPassword = Environment.GetEnvironmentVariable("PASSWORD") ?? "password";
     }
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
