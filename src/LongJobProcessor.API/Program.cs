@@ -21,7 +21,7 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? ["http://localhost:4200"];
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? ["http://localhost:9000", "http://localhost:4200"];
 
         builder.Services.AddAuthentication("Basic")
             .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Basic", options => { });
