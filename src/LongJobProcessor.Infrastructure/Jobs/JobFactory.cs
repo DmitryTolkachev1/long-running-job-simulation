@@ -11,7 +11,7 @@ public class JobFactory : IJobFactory
     {
         return type switch
         {
-            JobType.Encode => new InputEncodeJob(userId) { Input = jobPayload["Input"].ToString() ?? throw new ArgumentNullException("Input") },
+            JobType.Encode => new InputEncodeJob(userId) { Input = jobPayload["Input"]?.ToString() ?? throw new ArgumentNullException("Input") },
             _ => throw new NotImplementedException(),
         };
     }

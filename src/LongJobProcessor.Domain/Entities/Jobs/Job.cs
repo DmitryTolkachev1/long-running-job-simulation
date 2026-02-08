@@ -5,8 +5,8 @@ namespace LongJobProcessor.Domain.Entities.Jobs;
 
 public abstract class Job
 {
-    public Guid Id { get; }
-    public string UserId { get; }
+    public Guid Id { get; set; }
+    public string UserId { get; set; }
     public JobStateMachine State { get; } = new();
     public JobStatus Status => State.Status;
 

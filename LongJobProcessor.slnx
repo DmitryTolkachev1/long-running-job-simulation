@@ -7,4 +7,10 @@
     <Project Path="src/LongJobProcessor.Persistence/LongJobProcessor.Persistence.csproj" Id="753933c3-6de6-472e-9588-cb99c79824c1" />
   </Folder>
   <Folder Name="/tests/" />
+  <Folder Name="/tests/unit/">
+    <Project Path="tests/unit/LongJobProcessor.UnitTests.API/LongJobProcessor.UnitTests.API.csproj" />
+    <Project Path="tests/unit/LongJobProcessor.UnitTests.Application/LongJobProcessor.UnitTests.Application.csproj" />
+    <Project Path="tests/unit/LongJobProcessor.UnitTests.Domain/LongJobProcessor.UnitTests.Domain.csproj" />
+    <Project Path="tests/unit/LongJobProcessor.UnitTests.Infrastructure/LongJobProcessor.UnitTests.Infrastructure.csproj" />
+  </Folder>
 </Solution>
