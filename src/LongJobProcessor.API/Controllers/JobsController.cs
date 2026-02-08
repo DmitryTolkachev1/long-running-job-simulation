@@ -1,10 +1,10 @@
-﻿using LongJobProcessor.Application.Common;
+﻿using LongJobProcessor.API.Extensions;
+using LongJobProcessor.Application.Common;
 using LongJobProcessor.Application.DTO;
 using LongJobProcessor.Application.Jobs.Commands.CancelJob;
 using LongJobProcessor.Application.Jobs.Commands.ConnectToJob;
 using LongJobProcessor.Application.Jobs.Commands.CreateJob;
 using LongJobProcessor.Application.Jobs.Queries.GetJobState;
-using LongJobProcessor.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,7 +28,9 @@ public class JobsController : ControllerBase
         var userId = GetUserId();
         var query = new GetJobStateQuery(userId, jobId);
 
-        return await _mediator.Send(query, cancellationToken);
+        var result = await _mediator.Send(query, cancellationToken);
+
+        return result.ToActionResult();
     }
 
     [HttpGet]
@@ -43,7 +45,9 @@ public class JobsController : ControllerBase
 
         var writer = new StreamWriter(Response.Body, leaveOpen: true) { AutoFlush = false };
         var query = new ConnectToJobQuery(jobId, userId, writer);
-        return await _mediator.Send(query, cancellationToken);
+
+        var result = await _mediator.Send(query, cancellationToken);
+        return result.ToActionResult();
     }
 
     [HttpPost]
@@ -52,7 +56,8 @@ public class JobsController : ControllerBase
         var userId = GetUserId();
         var command = new CreateJobCommand(userId, request.JobType, request.JobData);
 
-        return await _mediator.Send(command, cancellationToken);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult();
     }
 
     [HttpPost]
@@ -62,13 +67,17 @@ public class JobsController : ControllerBase
         var userId = GetUserId();
         var command = new CancelJobCommand(userId, jobId);
 
-        return await _mediator.Send(command, cancellationToken);
+        var result = await _mediator.Send(command, cancellationToken);
+        return result.ToActionResult();
     }
 
     private string GetUserId()
     {
-        return Request.Headers["X-User-Id"].FirstOrDefault()
-            ?? User?.Identity?.Name
-            ?? "anonymous";
+        if (User?.Identity?.IsAuthenticated == true && !string.IsNullOrEmpty(User.Identity.Name))
+        {
+            return User.Identity.Name;
+        }
+
+        return Request.Headers["X-User-Id"].FirstOrDefault() ?? "anonymous";
     }
 }

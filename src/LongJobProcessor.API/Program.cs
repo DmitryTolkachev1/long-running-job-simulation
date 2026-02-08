@@ -1,3 +1,4 @@
+using LongJobProcessor.API.Authentication;
 using LongJobProcessor.API.Workers;
 using LongJobProcessor.Application.Abstractions;
 using LongJobProcessor.Application.Behaviors;
@@ -10,6 +11,7 @@ using LongJobProcessor.Infrastructure.Jobs;
 using LongJobProcessor.Infrastructure.Workers;
 using LongJobProcessor.Persistence;
 using MediatR;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 
 namespace LongJobProcessor.API;
@@ -20,6 +22,9 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? ["http://localhost:4200"];
+
+        builder.Services.AddAuthentication("Basic")
+            .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Basic", options => { });
 
         builder.Services.AddCors(options =>
         {
@@ -76,6 +81,8 @@ public class Program
         }
 
         app.UseHttpsRedirection();
+
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.UseCors("AllowedSpecificOrigin");
