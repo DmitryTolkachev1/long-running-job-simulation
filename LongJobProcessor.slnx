@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/LongJobProcessor.API/LongJobProcessor.API.csproj" />
+    <Project Path="src/LongJobProcessor.Application/LongJobProcessor.Application.csproj" Id="4e2068e1-7ed4-4bbb-a780-812d7073e538" />
+    <Project Path="src/LongJobProcessor.Domain/LongJobProcessor.Domain.csproj" Id="f20c0649-15ef-4ddf-8206-d2ac52daed50" />
+    <Project Path="src/LongJobProcessor.Infrastructure/LongJobProcessor.Infrastructure.csproj" Id="808885df-9c95-45ac-a32a-b71f3c7afaa4" />
+    <Project Path="src/LongJobProcessor.Persistence/LongJobProcessor.Persistence.csproj" Id="753933c3-6de6-472e-9588-cb99c79824c1" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/unit/">
+    <Project Path="tests/unit/LongJobProcessor.UnitTests.API/LongJobProcessor.UnitTests.API.csproj" />
+    <Project Path="tests/unit/LongJobProcessor.UnitTests.Application/LongJobProcessor.UnitTests.Application.csproj" />
+    <Project Path="tests/unit/LongJobProcessor.UnitTests.Domain/LongJobProcessor.UnitTests.Domain.csproj" />
+    <Project Path="tests/unit/LongJobProcessor.UnitTests.Infrastructure/LongJobProcessor.UnitTests.Infrastructure.csproj" />
+  </Folder>
+</Solution>
