@@ -89,6 +89,18 @@ public class Program
 
         app.MapControllers();
 
+        app.MapGet("/api/health", (IWebHostEnvironment env) =>
+        {
+            var response = new
+            {
+                status = "Healthy",
+                timestamp = DateTime.UtcNow,
+                environment = env.EnvironmentName
+            };
+
+            return Results.Json(response);
+        });
+
         app.Run();
     }
 }
