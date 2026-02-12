@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using System.Security.Claims;
+using System.Threading;
 using Xunit;
 
 namespace LongJobProcessor.UnitTests.API.Controllers;
@@ -49,7 +50,7 @@ public class JobsControllerTests
 
         // Assert
         result.Should().NotBeNull();
-        result.Value.Should().Be(expectedResult);
+        result.Result.As<ObjectResult>().Value.Should().Be(expectedResult);
         _mediatorMock.Verify(x => x.Send(
             It.Is<CreateJobCommand>(c => c.UserId == userId && c.JobType == request.JobType),
             cancellationToken), Times.Once);
@@ -78,7 +79,7 @@ public class JobsControllerTests
 
         // Assert
         result.Should().NotBeNull();
-        result.Value.Should().Be(expectedResult);
+        result.Result.As<ObjectResult>().Value.Should().Be(expectedResult);
         _mediatorMock.Verify(x => x.Send(
             It.Is<GetJobStateQuery>(q => q.UserId == userId && q.JobId == jobId),
             cancellationToken), Times.Once);
@@ -102,7 +103,7 @@ public class JobsControllerTests
 
         // Assert
         result.Should().NotBeNull();
-        result.Value.Should().Be(expectedResult);
+        result.Result.As<ObjectResult>().Value.Should().Be(expectedResult);
         _mediatorMock.Verify(x => x.Send(
             It.Is<CancelJobCommand>(c => c.UserId == userId && c.JobId == jobId),
             cancellationToken), Times.Once);
@@ -156,6 +157,10 @@ public class JobsControllerTests
         {
             HttpContext = httpContext
         };
+        var expectedResult = new CreateJobResult { JobId = Guid.NewGuid() };
+        var cancellationToken = CancellationToken.None;
+        _mediatorMock.Setup(x => x.Send(It.IsAny<CreateJobCommand>(), cancellationToken))
+            .ReturnsAsync(expectedResult);
 
         // Act
         var result = await _controller.CreateJob(
@@ -185,6 +190,10 @@ public class JobsControllerTests
         {
             HttpContext = httpContext
         };
+        var expectedResult = new CreateJobResult { JobId = Guid.NewGuid() };
+        var cancellationToken = CancellationToken.None;
+        _mediatorMock.Setup(x => x.Send(It.IsAny<CreateJobCommand>(), cancellationToken))
+            .ReturnsAsync(expectedResult);
 
         // Act
         var result = await _controller.CreateJob(
@@ -206,6 +215,10 @@ public class JobsControllerTests
         {
             HttpContext = httpContext
         };
+        var expectedResult = new CreateJobResult { JobId = Guid.NewGuid() };
+        var cancellationToken = CancellationToken.None;
+        _mediatorMock.Setup(x => x.Send(It.IsAny<CreateJobCommand>(), cancellationToken))
+            .ReturnsAsync(expectedResult);
 
         // Act
         var result = await _controller.CreateJob(
